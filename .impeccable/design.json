@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T12:00:00Z",
+  "title": "Design System: Smart Split Bill",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Slate Ink",
+        "canonical": "#0f172a",
+        "tonalRamp": [
+          "#020617",
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1"
+        ]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Bone Canvas",
+        "canonical": "#f8fafc",
+        "tonalRamp": [
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#e2e8f0",
+          "#f1f5f9",
+          "#f8fafc"
+        ]
+      },
+      "neutral-surface": {
+        "role": "neutral",
+        "displayName": "Pure Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#e2e8f0",
+          "#f1f5f9",
+          "#f8fafc",
+          "#ffffff"
+        ]
+      },
+      "accent-success": {
+        "role": "accent",
+        "displayName": "Verified Emerald",
+        "canonical": "#059669",
+        "tonalRamp": [
+          "#064e3b",
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#10b981",
+          "#34d399",
+          "#a7f3d0",
+          "#ecfdf5"
+        ]
+      },
+      "accent-warning": {
+        "role": "accent",
+        "displayName": "Caution Amber",
+        "canonical": "#d97706",
+        "tonalRamp": [
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fde68a",
+          "#fffbeb"
+        ]
+      },
+      "accent-danger": {
+        "role": "accent",
+        "displayName": "Error Rose",
+        "canonical": "#e11d48",
+        "tonalRamp": [
+          "#881337",
+          "#9f1239",
+          "#be123c",
+          "#e11d48",
+          "#f43f5e",
+          "#fb7185",
+          "#fecdd3",
+          "#fff1f2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Section Headline",
+        "purpose": "Step view headers and major modal headings."
+      },
+      "title": {
+        "displayName": "Card & Table Title",
+        "purpose": "Card titles, table headers, and participant summaries."
+      },
+      "body": {
+        "displayName": "Data Body",
+        "purpose": "Receipt items, numeric inputs, and participant shares."
+      },
+      "label": {
+        "displayName": "Micro Label",
+        "purpose": "Step indicators, metadata chips, and system status tags."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-2xs",
+        "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        "purpose": "Minimal grounding shadow for white cards over canvas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-standard",
+        "value": "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default hover and active transition timing."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action trigger for wizard advancement and confirmations.",
+      "html": "<button class=\"ds-btn-primary\">Lanjut ke Review Item</button>",
+      "css": ".ds-btn-primary { background: #0f172a; color: #ffffff; padding: 6px 14px; font-size: 12px; font-weight: 500; font-family: Inter, system-ui, sans-serif; border: 1px solid #0f172a; border-radius: 6px; cursor: pointer; transition: background 0.15s, border-color 0.15s; } .ds-btn-primary:hover { background: #1e293b; border-color: #1e293b; }"
+    },
+    {
+      "name": "Outline Step Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action or step selector button.",
+      "html": "<button class=\"ds-btn-outline\"><span class=\"ds-step-num\">2</span> Review Item</button>",
+      "css": ".ds-btn-outline { background: #ffffff; color: #1e293b; padding: 6px 12px; font-size: 12px; font-weight: 500; font-family: Inter, system-ui, sans-serif; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: border-color 0.15s; } .ds-btn-outline:hover { border-color: #94a3b8; } .ds-step-num { width: 16px; height: 16px; border-radius: 9999px; background: #0f172a; color: #ffffff; font-size: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; }"
+    },
+    {
+      "name": "Data Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Hairline text or number input for receipt corrections.",
+      "html": "<input type=\"text\" class=\"ds-input\" value=\"Nasi Goreng Spesial\" placeholder=\"Nama item...\" />",
+      "css": ".ds-input { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: Inter, system-ui, sans-serif; font-weight: 500; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.15s; } .ds-input:focus { border-color: #0f172a; }"
+    },
+    {
+      "name": "Ledger Card",
+      "kind": "card",
+      "refersTo": "card-container",
+      "description": "Grounded container for step data and summary breakdowns.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Daftar Peserta Patungan</div><div class=\"ds-card-body\">2 Orang terdaftar</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); font-family: Inter, system-ui, sans-serif; } .ds-card-header { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px; } .ds-card-body { font-size: 12px; color: #64748b; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-neutral",
+      "description": "Compact chip indicator for system status and tags.",
+      "html": "<span class=\"ds-badge ds-badge-success\"><span class=\"ds-dot\"></span> OCR Siap</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; font-family: Inter, system-ui, sans-serif; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; } .ds-badge-success .ds-dot { width: 6px; height: 6px; border-radius: 9999px; background: #059669; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clean Ledger",
+    "overview": "Smart Split Bill presents a disciplined, utilitarian interface designed for post-meal financial clarity. It replaces cumbersome spreadsheets and opaque calculation apps with a clean accounting workspace that feels transparent, trustworthy, and lightweight. Every visual element communicates mathematical precision, privacy, and speed.",
+    "keyCharacteristics": [
+      "Restrained monochrome foundation (deep slate ink on clean bone canvas) with purposeful semantic accents.",
+      "Hairline geometry: 1px structural borders establish division without visual weight.",
+      "Compact, responsive touch targets calibrated for mobile cafe tables and desktop keyboards.",
+      "High-density data tables optimized for quick scanning of receipt items and individual allocations."
+    ],
+    "rules": [
+      {
+        "name": "The Ink and Canvas Rule",
+        "body": "Dark Slate (#0f172a) is reserved for authoritative elements—primary CTAs, active steps, and title text. Backgrounds remain strictly calm pale bone (#f8fafc) and crisp white (#ffffff). Accent colors never act as background fills for large surfaces.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Scarcity Rule",
+        "body": "Emerald, Amber, and Rose appear exclusively to convey factual state (operational readiness, confidence warnings, or destruction/removal). They are never applied as decorative badges.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Precision Rule",
+        "body": "Every numeric price and quantity display must use monospaced or tabular numeral features to guarantee vertical decimal alignment across multi-item receipt tables.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Boundary Rule",
+        "body": "No floating cards with heavy elevation. If two surfaces touch or nest, separate them using a 1px #e2e8f0 border, not a drop shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do format every currency amount using Indonesian locale (id-ID) with Rp prefix and period thousand separators (e.g. Rp 45.000).",
+      "Do ensure individual portion splits sum exactly to the bill total down to Rp 0 difference using the Largest Remainder algorithm.",
+      "Do keep cards grounded with 1px #e2e8f0 borders and white backgrounds over the #f8fafc canvas.",
+      "Do allow inline manual editing for all OCR-extracted values (names, quantities, prices, taxes)."
+    ],
+    "donts": [
+      "Don't use saturated bright accent colors for primary button backgrounds or page banners.",
+      "Don't use heavy blur backdrops or multi-layered floating drop shadows.",
+      "Don't hide tax, service charge, or item discounts inside opaque calculations; itemize every deduction transparently.",
+      "Don't introduce user authentication modals, account creation prompts, or persistent database forms."
+    ]
+  }
+}
