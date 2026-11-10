@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Instal Tesseract OCR & paket bahasa Indonesia + Inggris
 RUN apt-get update && apt-get install -y --no-install-recommends \
