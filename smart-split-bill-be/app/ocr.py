@@ -4,8 +4,7 @@ import math
 import logging
 import shutil
 import numpy as np
-from PIL import Image, ImageOps
-import cv2
+from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 import pytesseract
 
 logger = logging.getLogger("smart_split_bill.ocr")
@@ -38,49 +37,46 @@ def is_tesseract_available() -> bool:
     """Periksa apakah binary tesseract tersedia di environment host."""
     return detect_and_configure_tesseract()
 
-def deskew_image(cv_img: np.ndarray) -> np.ndarray:
-    """Luruskan orientasi teks struk jika miring menggunakan minAreaRect."""
+def estimate_skew_angle(gray: Image.Image, max_angle: float = 15.0) -> float:
+    """
+    Estimasi kemiringan teks menggunakan variansi proyeksi horizontal (Pillow + NumPy).
+    Menggantikan cv2.minAreaRect agar image OpenCV dapat dihilangkan dari dependency.
+    """
     try:
-        # Gunakan Otsu thresholding untuk segmentasi teks
-        if len(cv_img.shape) == 3:
-            gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = cv_img
+        arr = np.asarray(gray, dtype=np.uint8)
+        # Ambil sampel tengah agar proses cepat
+        h, w = arr.shape
+        if h < 40 or w < 40:
+            return 0.0
 
-        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-        coords = np.column_stack(np.where(thresh > 0))
-        if coords.shape[0] < 50:
-            return cv_img  # Tidak cukup piksel teks untuk deskew
+        # Binarisasi invers sederhana: teks jadi True
+        thresh = arr < 160
 
-        angle = cv2.minAreaRect(coords)[-1]
-        # minAreaRect sudut berkisar antara [-90, 0)
-        if angle < -45:
-            angle = -(90 + angle)
-        else:
-            angle = -angle
+        best_angle = 0.0
+        best_score = -1.0
 
-        # Hindari rotasi berlebihan jika sudut terdeteksi terlalu ekstrim (>30 deg)
-        if abs(angle) > 30 or abs(angle) < 0.5:
-            return cv_img
+        for angle in np.arange(-max_angle, max_angle + 0.1, 0.5):
+            rotated_img = gray.rotate(float(angle), resample=Image.Resampling.BILINEAR, fillcolor=255)
+            r = np.asarray(rotated_img, dtype=np.uint8) < 160
+            # Variansi jumlah piksel teks per baris: maksimal saat teks rata horizontal
+            row_sums = r.sum(axis=1).astype(np.float64)
+            score = float(row_sums.var())
+            if score > best_score:
+                best_score = score
+                best_angle = float(angle)
 
-        (h, w) = cv_img.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(
-            cv_img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE
-        )
-        return rotated
+        return best_angle
     except Exception as e:
-        logger.warning(f"Gagal melakukan deskew: {e}")
-        return cv_img
+        logger.warning(f"Gagal melakukan estimasi skew: {e}")
+        return 0.0
 
 def preprocess_image(image_bytes: bytes) -> tuple[np.ndarray, dict]:
     """
-    Pipeline pra-pemrosesan gambar optimal untuk Tesseract 5.x:
+    Pipeline pra-pemrosesan gambar optimal untuk Tesseract 5.x (Pillow + NumPy, tanpa OpenCV):
     1. Baca bytes ke PIL Image & normalisasi orientasi EXIF
     2. Rescaling terkontrol: optimasi resolusi/DPI agar tinggi karakter teks ideal (~25-35px)
-    3. Konversi ke Grayscale OpenCV
-    4. CLAHE (Contrast Limited Adaptive Histogram Equalization) untuk kontras teks tajam
+    3. Konversi ke Grayscale
+    4. Peningkatan kontras lokal (autocontrast + sharpen, pengganti CLAHE)
     5. Deskewing (pelurusan kemiringan struk)
     """
     metadata = {}
@@ -97,8 +93,6 @@ def preprocess_image(image_bytes: bytes) -> tuple[np.ndarray, dict]:
 
         # Step 1: Rescaling resolusi ideal
         # Tesseract membaca paling akurat bila lebar struk sekitar 1400-1800 px
-        target_w = w
-        target_h = h
         if w < 1100:
             scale = 1500 / w
             target_w = int(w * scale)
@@ -112,20 +106,22 @@ def preprocess_image(image_bytes: bytes) -> tuple[np.ndarray, dict]:
             pil_img = pil_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
             metadata["downscaled"] = (target_w, target_h)
 
-        # Konversi PIL ke numpy array (RGB -> BGR OpenCV)
-        cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        # Step 2: Grayscale
+        gray = ImageOps.grayscale(pil_img)
 
-    # Step 2: Grayscale
-    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-
-    # Step 3: CLAHE untuk meningkatkan kontras teks terhadap latar kertas thermal
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(gray)
+    # Step 3: Peningkatan kontras & ketajaman teks (pengganti CLAHE OpenCV)
+    gray = ImageOps.autocontrast(gray, cutoff=1)
+    gray = ImageEnhance.Contrast(gray).enhance(1.4)
+    gray = gray.filter(ImageFilter.MedianFilter(size=3))
+    gray = gray.filter(ImageFilter.UnsharpMask(radius=1.2, percent=150, threshold=3))
 
     # Step 4: Deskew (luruskan struk jika miring)
-    deskewed = deskew_image(enhanced)
+    angle = estimate_skew_angle(gray)
+    if 0.5 <= abs(angle) <= 15.0:
+        gray = gray.rotate(angle, resample=Image.Resampling.BICUBIC, fillcolor=255)
+        metadata["deskew_angle"] = round(angle, 2)
 
-    return deskewed, metadata
+    return np.array(gray), metadata
 
 def run_tesseract_ocr(processed_img: np.ndarray, languages: str = "ind+eng") -> tuple[str, float]:
     """
@@ -189,4 +185,3 @@ def run_tesseract_ocr(processed_img: np.ndarray, languages: str = "ind+eng") -> 
             return text, 0.70
         except Exception as e2:
             raise RuntimeError(f"Gagal memproses OCR: {e2}")
-
