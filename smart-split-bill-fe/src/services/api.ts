@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const client = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 45000, // 45 detik untuk mengantisipasi OCR dan cold start
+  timeout: 120000, // 120 detik: OCR di CPU sharing (free tier) butuh 35-60 detik
 });
 
 export async function checkBackendHealth(): Promise<{ status: string; tesseract: string }> {
