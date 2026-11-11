@@ -43,20 +43,53 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS Allowlist (NFR-S2)
+# CORS Allowlist (NFR-S2 & Flexible Vercel matching)
 allowed_origins_env = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
 )
 origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
 
+def is_allowed_origin(origin: str) -> bool:
+    if not origin:
+        return False
+    if origin in origins:
+        return True
+    # Izinkan semua sub-domain Vercel milik project ini (*.vercel.app)
+    if origin.endswith(".vercel.app") and "smart-split-bill" in origin:
+        return True
+    return False
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origin_regex=r"https:\/\/smart-split-bill.*\.vercel\.app",
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Force CORS headers pada setiap response (bypass CloudFront cache CORS strip)
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response as StarletteResponse
+
+class ForceCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: StarletteRequest, call_next):
+        origin = request.headers.get("origin", "")
+        if request.method == "OPTIONS":
+            response = StarletteResponse(status_code=200)
+        else:
+            response = await call_next(request)
+        if is_allowed_origin(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Vary"] = "Origin"
+        return response
+
+app.add_middleware(ForceCORSMiddleware)
 
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "5"))
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
